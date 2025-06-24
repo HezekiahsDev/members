@@ -321,22 +321,21 @@ export function MembersArea({
       }
     >
       {/* Conditionally render the header. Hide it when embedded in another site. */}
-      {!isEmbedded && (
-        <header className="bg-white border-b p-4 shadow-sm">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <Link href="/" className="flex items-center">
-              {/* <img src="/logo.svg" alt="Kefford Consulting" className="h-8" /> */}
-              <span className="font-semibold text-xl ml-2">Kefford</span>
-            </Link>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm">Welcome, {userData.name}</span>
-              <Button variant="outline" size="sm">
-                Logout
-              </Button>
-            </div>
+
+      <header className="bg-white border-b p-4 shadow-sm">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Link href="/" className="flex items-center">
+            {/* <img src="/logo.svg" alt="Kefford Consulting" className="h-8" /> */}
+            <span className="font-semibold text-xl ml-2">Kefford</span>
+          </Link>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm">Welcome, {userData.name}</span>
+            <Button variant="outline" size="sm">
+              Logout
+            </Button>
           </div>
-        </header>
-      )}
+        </div>
+      </header>
 
       {/* Bot Continuation Modal */}
       {showContinuationBot && botUserData && (
