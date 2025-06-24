@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -15,6 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Home,
   Users,
@@ -37,7 +44,7 @@ import {
 import { cn } from "@/lib/utils";
 
 // Mock data - in a real app, this would come from a database via server components or API
-const mockUser = {
+const mockUserData = {
   name: "John Doe",
   email: "john@example.com",
   purchases: [
@@ -80,16 +87,31 @@ const reviewPlatforms = [
 const MAX_REVIEW_CREDITS = 150;
 const CREDIT_PER_REVIEW = 25;
 
-interface MembersAreaProps {
-  startBotAt?: number | null;
+// Add a prop to conditionally hide elements when embedded
+export interface MembersAreaProps {
+  startBotAt?: number;
+  isEmbedded?: boolean; // New prop
 }
 
-export function MembersArea({ startBotAt }: MembersAreaProps) {
+export function MembersArea({
+  startBotAt,
+  isEmbedded = false,
+}: MembersAreaProps) {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [userData, setUserData] = useState(mockUser); // In real app, fetch this
+  const [userData, setUserData] = useState(mockUserData); // In real app, fetch this
   const [showSupportBot, setShowSupportBot] = useState(false);
   const [showContinuationBot, setShowContinuationBot] = useState(false);
-  const [botUserData, setBotUserData] = useState(null);
+  const [botUserData, setBotUserData] = useState<any>(null); // Consider a more specific type
+
+  const tabs = [
+    { value: "dashboard", label: "Dashboard", icon: Home },
+    { value: "referral", label: "Referral", icon: Users },
+    { value: "reviews", label: "Reviews", icon: Star },
+    { value: "content", label: "Content", icon: BookOpen },
+    { value: "wins", label: "Quick Wins", icon: Zap },
+    { value: "services", label: "Services", icon: Calendar },
+    { value: "support", label: "Support", icon: LifeBuoy },
+  ];
 
   // Check if we need to continue bot conversation from Q4
   useEffect(() => {
@@ -120,11 +142,43 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
   );
   const [tweakBusinessSize, setTweakBusinessSize] = useState("");
   const [tweakDreamOutcome, setTweakDreamOutcome] = useState("");
-  const [tweakSuccessMetric, setTweakSuccessMetric] = useState("");
-  const [tweakSettleOutcome, setTweakSettleOutcome] = useState("");
   const [tweakAdditionalNotes, setTweakAdditionalNotes] = useState("");
   const [tweakFormError, setTweakFormError] = useState("");
   const [tweakSuccessMessage, setTweakSuccessMessage] = useState("");
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Effect to handle resizing for iframe embedding
+  useEffect(() => {
+    const element = containerRef.current;
+    // Run this logic only when embedded
+    const isIframe =
+      isEmbedded ||
+      (typeof window !== "undefined" && window.self !== window.top);
+    if (!element || !isIframe) return;
+
+    // Function to send height to parent
+    const sendHeight = () => {
+      // Add a small delay to ensure rendering is complete before calculating height
+      setTimeout(() => {
+        const height = element.scrollHeight;
+        // IMPORTANT: For production, change '*' to your Wix site's origin for security.
+        // e.g., "https://username.wixsite.com"
+        window.parent.postMessage({ type: "setIframeHeight", height }, "*");
+      }, 150);
+    };
+
+    // Use ResizeObserver to detect content height changes
+    const resizeObserver = new ResizeObserver(sendHeight);
+    resizeObserver.observe(element);
+
+    // Send height on initial load and after tab changes
+    sendHeight();
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [activeTab, isEmbedded]); // Re-run when activeTab or embedded status changes
 
   const totalReviewCredits = userData.reviews
     .filter((r) => r.submitted)
@@ -138,7 +192,6 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
     // Reset other fields or prefill them
     setTweakBusinessSize("");
     setTweakDreamOutcome("");
-    // ... etc.
     setTweakAdditionalNotes("");
     setTweakFormError("");
     setTweakSuccessMessage("");
@@ -164,8 +217,6 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
         q5_challenge: tweakChallenge,
         business_size: tweakBusinessSize,
         dream_outcome: tweakDreamOutcome,
-        success_metric: tweakSuccessMetric,
-        settle_outcome: tweakSettleOutcome,
         additional_notes: tweakAdditionalNotes,
       });
 
@@ -217,28 +268,25 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
     }
   };
 
-  async function handleSupportFormSubmit(formData: FormData) {
-    const name = userData.name;
-    const email = userData.email;
+  const handleSupportFormSubmit = async (formData: FormData) => {
     const message = formData.get("support_message") as string;
-
     if (!message) {
-      alert("Please enter a message for support.");
+      alert("Please enter a message.");
       return;
     }
+
     try {
       await submitContactForm({
-        name,
-        email,
-        message,
+        name: userData.name,
+        email: userData.email,
+        message: message,
         pageSource: "Members Area Support",
       });
-      alert("Support request submitted! We'll get back to you soon.");
-      // Reset form if needed: (e.target as HTMLFormElement).reset();
+      alert("Support form submitted!");
     } catch (error) {
       alert("Failed to submit support request.");
     }
-  }
+  };
 
   const handleBotComplete = () => {
     setShowContinuationBot(false);
@@ -246,29 +294,31 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-arial">
-      <header className="bg-white border-b p-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <div className="text-red-600 font-bold text-2xl">K</div>
-            <span className="ml-2 text-gray-800 text-lg">
-              Kefford Consulting
-            </span>
-          </Link>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600 hidden md:inline">
-              Welcome, {userData.name}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => alert("Logout (mocked)")}
-            >
-              Logout
-            </Button>
+    // When embedded, we want a transparent background and content-driven height
+    <div
+      ref={containerRef}
+      className={cn(
+        "font-arial",
+        isEmbedded ? "bg-transparent" : "min-h-screen bg-gray-100"
+      )}
+    >
+      {/* Conditionally render the header. Hide it when embedded in another site. */}
+      {!isEmbedded && (
+        <header className="bg-white border-b p-4 shadow-sm">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <Link href="/" className="flex items-center">
+              {/* <img src="/logo.svg" alt="Kefford Consulting" className="h-8" /> */}
+              <span className="font-semibold text-xl ml-2">Kefford</span>
+            </Link>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm">Welcome, {userData.name}</span>
+              <Button variant="outline" size="sm">
+                Logout
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Bot Continuation Modal */}
       {showContinuationBot && botUserData && (
@@ -306,16 +356,28 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 bg-gray-200 p-1 rounded-lg">
-            {[
-              { value: "dashboard", label: "Dashboard", icon: Home },
-              { value: "referral", label: "Referral", icon: Users },
-              { value: "reviews", label: "Reviews", icon: Star },
-              { value: "content", label: "Content", icon: BookOpen },
-              { value: "wins", label: "Quick Wins", icon: Zap },
-              { value: "services", label: "Services", icon: Calendar },
-              { value: "support", label: "Support", icon: LifeBuoy },
-            ].map((tab) => (
+          {/* Mobile/Tablet Dropdown */}
+          <div className="lg:hidden">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a tab" />
+              </SelectTrigger>
+              <SelectContent>
+                {tabs.map((tab) => (
+                  <SelectItem key={tab.value} value={tab.value}>
+                    <div className="flex items-center">
+                      <tab.icon size={18} className="mr-2" />
+                      {tab.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Desktop Tabs */}
+          <TabsList className="hidden lg:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 bg-gray-200 p-1 rounded-lg">
+            {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
@@ -978,24 +1040,6 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
           </TabsContent>
         </Tabs>
       </main>
-
-      {/* Footer with recommendations - these are placeholders for now */}
-      <footer className="max-w-7xl mx-auto p-6 mt-10 border-t text-center text-sm text-gray-500">
-        <h3 className="font-semibold mb-2">
-          Future Enhancements (Post-Launch Ideas):
-        </h3>
-        <ul className="list-disc list-inside inline-block text-left text-xs">
-          <li>Community Forum for user tips.</li>
-          <li>Feedback Loop: "Rate Your Play: 1-5 Stars".</li>
-          <li>Upsell Notifications for bundles.</li>
-          <li>"Case Studies" page.</li>
-          <li>Blog section with starter articles.</li>
-        </ul>
-        <p className="mt-4">
-          &copy; {new Date().getFullYear()} Kefford Consulting LLC. All Rights
-          Reserved.
-        </p>
-      </footer>
     </div>
   );
 }
