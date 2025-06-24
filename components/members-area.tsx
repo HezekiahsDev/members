@@ -247,7 +247,7 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
 
   return (
     <div className="min-h-screen bg-gray-100 font-arial">
-      <header className="bg-white border-b p-4 shadow-sm">
+      {/* <header className="bg-white border-b p-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <div className="text-red-600 font-bold text-2xl">K</div>
@@ -268,7 +268,7 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
             </Button>
           </div>
         </div>
-      </header>
+      </header> */}
 
       {/* Bot Continuation Modal */}
       {showContinuationBot && botUserData && (
