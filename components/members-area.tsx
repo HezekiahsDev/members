@@ -161,10 +161,17 @@ export function MembersArea({
     const sendHeight = () => {
       // Add a small delay to ensure rendering is complete before calculating height
       setTimeout(() => {
-        const height = element.scrollHeight;
+        const height = Math.min(element.scrollHeight, window.innerHeight - 20);
         // IMPORTANT: For production, change '*' to your Wix site's origin for security.
         // e.g., "https://username.wixsite.com"
-        window.parent.postMessage({ type: "setIframeHeight", height }, "*");
+        window.parent.postMessage(
+          {
+            type: "setIframeHeight",
+            height: height,
+            overflow: "hidden",
+          },
+          "*"
+        );
       }, 150);
     };
 
@@ -299,8 +306,19 @@ export function MembersArea({
       ref={containerRef}
       className={cn(
         "font-arial",
-        isEmbedded ? "bg-transparent" : "min-h-screen bg-gray-100"
+        isEmbedded
+          ? "bg-transparent overflow-hidden"
+          : "min-h-screen bg-gray-100"
       )}
+      style={
+        isEmbedded
+          ? {
+              height: "100vh",
+              maxHeight: "100vh",
+              overflow: "hidden",
+            }
+          : undefined
+      }
     >
       {/* Conditionally render the header. Hide it when embedded in another site. */}
       {!isEmbedded && (
@@ -349,7 +367,13 @@ export function MembersArea({
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto p-4 md:p-6">
+      <main
+        className={cn(
+          "max-w-7xl mx-auto p-4 md:p-6",
+          isEmbedded &&
+            "max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-hide"
+        )}
+      >
         <Tabs
           defaultValue="dashboard"
           value={activeTab}

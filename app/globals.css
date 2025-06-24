@@ -10,6 +10,29 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Hide scrollbars for iframe embedding */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
+  /* Iframe container styles */
+  .iframe-container {
+    overflow: hidden;
+    height: 100vh;
+    max-height: 100vh;
+  }
+
+  /* Ensure content fits within viewport when embedded */
+  .iframe-content {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
 }
 
 @layer base {
