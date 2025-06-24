@@ -247,7 +247,7 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
 
   return (
     <div className="min-h-screen bg-gray-100 font-arial">
-      {/* <header className="bg-white border-b p-4 shadow-sm">
+      <header className="bg-white border-b p-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <div className="text-red-600 font-bold text-2xl">K</div>
@@ -268,7 +268,7 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
             </Button>
           </div>
         </div>
-      </header> */}
+      </header>
 
       {/* Bot Continuation Modal */}
       {showContinuationBot && botUserData && (
@@ -980,8 +980,10 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
       </main>
 
       {/* Footer with recommendations - these are placeholders for now */}
-      {/* <footer className="max-w-7xl mx-auto p-6 mt-10 border-t text-center text-sm text-gray-500">
-        <h3 className="font-semibold mb-2">Future Enhancements (Post-Launch Ideas):</h3>
+      <footer className="max-w-7xl mx-auto p-6 mt-10 border-t text-center text-sm text-gray-500">
+        <h3 className="font-semibold mb-2">
+          Future Enhancements (Post-Launch Ideas):
+        </h3>
         <ul className="list-disc list-inside inline-block text-left text-xs">
           <li>Community Forum for user tips.</li>
           <li>Feedback Loop: "Rate Your Play: 1-5 Stars".</li>
@@ -989,8 +991,11 @@ export function MembersArea({ startBotAt }: MembersAreaProps) {
           <li>"Case Studies" page.</li>
           <li>Blog section with starter articles.</li>
         </ul>
-        <p className="mt-4">&copy; {new Date().getFullYear()} Kefford Consulting LLC. All Rights Reserved.</p>
-      </footer> */}
+        <p className="mt-4">
+          &copy; {new Date().getFullYear()} Kefford Consulting LLC. All Rights
+          Reserved.
+        </p>
+      </footer>
     </div>
   );
 }
